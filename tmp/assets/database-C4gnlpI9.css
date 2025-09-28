@@ -1,0 +1,186 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  line-height: 1.5;
+  padding: 1rem;
+  background: #f5f7fa;
+  color: #1a1c1d;
+}
+
+body {
+  max-width: 960px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+  padding: 2rem;
+}
+
+header h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+#language-select {
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+}
+
+#controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+#controls label {
+  font-weight: 600;
+}
+
+#controls select,
+#controls button {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5f5;
+  background: #eef2ff;
+  cursor: pointer;
+}
+
+#controls select:focus,
+#controls button:focus {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+#drop-zone {
+  border: 2px dashed #94a3b8;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  background: #f8fafc;
+}
+
+#drop-zone.dragging {
+  background: #e0e7ff;
+  border-color: #6366f1;
+}
+
+#status {
+  min-height: 1.5rem;
+  font-weight: 600;
+}
+
+#status[data-state="error"] {
+  color: #dc2626;
+}
+
+#status[data-state="info"] {
+  color: #1e3a8a;
+}
+
+#preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+#preview header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#download-button {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #4f46e5;
+  background: #4f46e5;
+  color: #fff;
+  cursor: pointer;
+}
+
+#download-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#output {
+  width: 100%;
+  min-height: 320px;
+  font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  border-radius: 8px;
+  border: 1px solid #cbd5f5;
+  padding: 1rem;
+  background: #0f172a;
+  color: #f8fafc;
+  resize: vertical;
+}
+
+footer {
+  font-size: 0.875rem;
+  color: #475569;
+  text-align: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    background: #0f172a;
+    color: #e2e8f0;
+  }
+
+  body {
+    background: #111827;
+    color: #e2e8f0;
+  }
+
+  #controls select,
+  #controls button {
+    border-color: #1e293b;
+    background: #1f2937;
+    color: inherit;
+  }
+
+  #drop-zone {
+    border-color: #334155;
+    background: #1e293b;
+  }
+
+  #drop-zone.dragging {
+    background: #312e81;
+    border-color: #6366f1;
+  }
+
+  #output {
+    background: #0b1120;
+    border-color: #1e293b;
+  }
+
+  footer {
+    color: #94a3b8;
+  }
+
+  #language-select {
+    border-color: #1e293b;
+    background: #1f2937;
+  }
+}

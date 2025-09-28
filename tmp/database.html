@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title data-i18n="title">ActionEditor Database Converter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="module" crossorigin src="./assets/database-7dCDSyZZ.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/database-C4gnlpI9.css">
+  </head>
+  <body>
+    <header>
+      <div class="header-top">
+        <h1 data-i18n="title">ActionEditor Database Converter</h1>
+        <select id="language-select">
+          <option value="en">English</option>
+          <option value="ja">日本語</option>
+        </select>
+      </div>
+      <p data-i18n="description">Drop a supported <code>.dat</code> or <code>.json</code> file to convert between the ActionEditor database formats.</p>
+    </header>
+    <main>
+      <section id="controls">
+        <label for="type-select" data-i18n="databaseType">Database type</label>
+        <select id="type-select">
+          <option value="" data-i18n="autoDetect">Auto-detect from filename</option>
+        </select>
+        <button id="file-button" type="button" data-i18n="selectFile">Select a file</button>
+        <input id="file-input" type="file" hidden>
+      </section>
+      <section id="drop-zone" tabindex="0" aria-label="File drop zone">
+        <p data-i18n="dropZoneText">Drop a file here or use the "Select a file" button.</p>
+      </section>
+      <section id="status" role="status" aria-live="polite"></section>
+      <section id="preview" hidden>
+        <header>
+          <h2 data-i18n="preview">Preview</h2>
+          <button id="download-button" type="button" disabled data-i18n="downloadResult">Download result</button>
+        </header>
+        <textarea id="output" readonly></textarea>
+      </section>
+    </main>
+    <footer>
+      <p data-i18n="supportedDatabases">Supported databases: Anime, AnimeSet, Bgm, CharaEffect, Picture, Sound, Bmp_CharaExc, Effect, ScrEffect, SwordType.</p>
+    </footer>
+  </body>
+</html>
