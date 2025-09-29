@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title data-i18n="title">ActionEditor System.dat Converter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="module" crossorigin src="./assets/system-BSI2NlNJ.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/system-DBwGQ-cN.css">
+  </head>
+  <body>
+    <main>
+    <header>
+      <div class="header-top">
+        <h1 data-i18n="title">ActionEditor System.dat Converter</h1>
+        <select id="language-select" class="language-select">
+          <option value="en">English</option>
+          <option value="ja">日本語</option>
+        </select>
+      </div>
+      <p data-i18n="description">Convert between <code>System.dat</code> and its JSON representation.</p>
+    </header>
+
+      <section class="panel" aria-labelledby="converter-title">
+        <div>
+          <h2 id="converter-title" data-i18n="converterTitle">System.dat Converter</h2>
+          <p data-i18n="converterDescription">Drop a System.dat file to convert to JSON, or a JSON file to rebuild System.dat.</p>
+        </div>
+
+        <div id="drop-zone" class="drop-zone" tabindex="0">
+          <div class="drop-zone-content">
+            <p data-i18n="dropZoneText">Drop a <code>.dat</code> or <code>.json</code> file here</p>
+          </div>
+          <section class="actions">
+            <button id="file-button" type="button" data-i18n="selectFile">Select a file</button>
+            <input id="file-input" type="file" hidden>
+          </section>
+        </div>
+
+        <section id="status" class="status" role="status" aria-live="polite"></section>
+
+        <section id="preview" class="preview-section" hidden>
+          <header class="preview-header">
+            <h3 data-i18n="preview">Preview</h3>
+            <div class="preview-actions">
+              <button id="download-button" type="button" data-i18n="downloadResult">Download result</button>
+            </div>
+          </header>
+          <textarea id="output" readonly></textarea>
+        </section>
+
+        <!-- Add download section for built .dat files (hidden when no file is built) -->
+        <section id="download-section" class="download-section" hidden>
+          <header class="download-header">
+            <h3 data-i18n="downloadReady">Download Ready</h3>
+            <a id="download-dat-link" class="download-link" href="#" download>
+              <span data-i18n="downloadSystemDat">Download System.dat</span>
+            </a>
+          </header>
+        </section>
+      </section>
+    <footer>
+      <p data-i18n="footerTip">Tip: start from the original <code>System.dat</code> file in <code>default</code>.</p>
+    </footer>
+    </main>
+  </body>
+</html>
