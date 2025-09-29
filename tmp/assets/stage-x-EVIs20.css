@@ -1,0 +1,181 @@
+:root {
+  --background-color: #f0f2f5;
+  --panel-background: #ffffff;
+  --text-color: #1c1e21;
+  --secondary-text-color: #606770;
+  --primary-color: #1877f2;
+  --primary-hover-color: #166fe5;
+  --secondary-color: #e4e6eb;
+  --secondary-hover-color: #d8dade;
+  --border-color: #ced0d4;
+  --status-success: #31a24c;
+  --status-error: #fa383e;
+  --drop-zone-border: #ccd0d5;
+  --drop-zone-hover: #ebf3ff;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  margin: 0;
+  padding: 2rem;
+  line-height: 1.5;
+}
+
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+}
+
+header p {
+  margin: 0;
+  color: var(--secondary-text-color);
+  max-width: 60ch;
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.panel {
+  background-color: var(--panel-background);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.panel h2 {
+  margin: 0 0 0.5rem 0;
+}
+
+.panel p {
+  margin: 0;
+  color: var(--secondary-text-color);
+}
+
+.drop-zone {
+  border: 2px dashed var(--drop-zone-border);
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+.drop-zone.dragging {
+  background-color: var(--drop-zone-hover);
+  border-color: var(--primary-color);
+}
+
+.drop-zone-content p {
+  margin: 0 0 1rem 0;
+}
+
+.file-picker {
+  display: none; /* We use the drop zone and secondary button */
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+button, .download-link {
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.75rem 1.25rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+button {
+  background-color: var(--primary-color);
+  color: white;
+}
+button:hover {
+  background-color: var(--primary-hover-color);
+}
+
+.secondary {
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+}
+.secondary:hover {
+  background-color: var(--secondary-hover-color);
+}
+.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.status {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  background-color: var(--secondary-color);
+  min-height: 1.5em;
+  font-size: 0.9rem;
+  overflow-wrap: break-word;
+}
+
+.status[data-state="success"] { background-color: var(--status-success); color: white; }
+.status[data-state="error"] { background-color: var(--status-error); color: white; }
+
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  flex-grow: 1;
+  min-height: 200px;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.footer {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #90949c;
+  padding-top: 1rem;
+}
+
+.language-select {
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+@media (max-width: 900px) {
+  .panels {
+    grid-template-columns: 1fr;
+  }
+}

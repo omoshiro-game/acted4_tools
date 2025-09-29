@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n="title">Stage File Converter</title>
+    <script type="module" crossorigin src="./assets/stage-CMqXVo0x.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/stage-x-EVIs20.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1 data-i18n="title">Stage File Converter</h1>
+          <p data-i18n="description">
+            Dump `.stg4_1020` files to JSON, tweak them, then rebuild an identical
+            binary. The parser mirrors the hex pattern so you can debug issues without
+            leaving the browser.
+          </p>
+        </div>
+        <select id="language-select" class="language-select">
+          <option value="en">English</option>
+          <option value="ja">日本語</option>
+        </select>
+      </header>
+
+      <div class="panels">
+        <section class="panel" aria-labelledby="dump-title">
+          <div>
+            <h2 id="dump-title" data-i18n="dumpTitle">Dump Stage File</h2>
+            <p data-i18n="dumpDescription">Select a binary stage file. The tool parses and prints a formatted JSON payload.</p>
+          </div>
+
+          <div class="drop-zone" id="dump-drop-zone">
+            <div class="drop-zone-content">
+              <p data-i18n="dropZoneDump">Drop .stg4_1020 file here or use file picker</p>
+            </div>
+            <label class="file-picker">
+              <span data-i18n="filePickerLabel">Stage file (.stg4_1020)</span>
+              <input id="dump-file" type="file" accept=".stg4_1020,application/octet-stream" />
+            </label>
+          </div>
+
+          <section class="actions">
+            <button id="dump-button" type="button" data-i18n="dumpButton">Dump to JSON</button>
+            <button id="copy-json" class="secondary" type="button" data-i18n="copyJson">Copy JSON</button>
+            <a id="download-json" class="download-link secondary disabled" href="#" download data-i18n="downloadJson">
+              Download JSON
+            </a>
+          </section>
+
+          <div id="dump-status" class="status" role="status" aria-live="polite"></div>
+
+          <textarea id="json-output" spellcheck="false" placeholder="JSON output" data-i18n-placeholder="jsonOutputPlaceholder"></textarea>
+        </section>
+
+        <section class="panel" aria-labelledby="build-title">
+          <div>
+            <h2 id="build-title" data-i18n="buildTitle">Build Stage File</h2>
+            <p data-i18n="buildDescription">Load a JSON payload (dumped or hand-authored) and rebuild a binary stage file.</p>
+          </div>
+
+          <div class="drop-zone" id="build-drop-zone">
+            <div class="drop-zone-content">
+              <p data-i18n="dropZoneBuild">Drop JSON file here or use file picker</p>
+            </div>
+            <section class="actions">
+              <button id="load-json-file" class="secondary" type="button" data-i18n="loadJsonFile">Load JSON file</button>
+              <input id="build-file" type="file" accept=".json,application/json" hidden />
+            </section>
+          </div>
+
+          <section class="actions">
+            <button id="build-button" type="button" data-i18n="buildButton">Build binary</button>
+            <a id="download-dat" class="download-link secondary disabled" href="#" download data-i18n="downloadDat">
+              Download .stg4_1020
+            </a>
+          </section>
+
+          <div id="build-status" class="status" role="status" aria-live="polite"></div>
+
+          <textarea
+            id="json-input"
+            spellcheck="false"
+            placeholder="Paste or edit the stage JSON that should become a .stg4_1020 file"
+            data-i18n-placeholder="jsonInputPlaceholder"
+          ></textarea>
+        </section>
+      </div>
+
+      <p class="footer" data-i18n="footer">
+        For testing purpose. Not a final product or tool.
+      </p>
+    </main>
+
+  </body>
+</html>
