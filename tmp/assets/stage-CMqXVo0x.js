@@ -16716,7 +16716,7 @@ const CONFIG = {
    * that could lead to excessive memory allocation.
    * @type {number}
    */
-  MAX_ARRAY_SIZE: 4096
+  MAX_ARRAY_SIZE: 90001
 };
 function ensureReader(source) {
   if (source instanceof DataReader) {
