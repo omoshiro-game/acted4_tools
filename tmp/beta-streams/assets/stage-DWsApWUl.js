@@ -1616,6 +1616,81 @@ function serializeStage(data) {
     }
   });
 }
+const translations = {
+  en: {
+    title: "ActionEditor Stage4 Converter",
+    description: "Convert between .stg4_* stage files and their JSON representation.",
+    uploadSection: "Upload STG4 File",
+    dropZoneTitle: "Drag & Drop your STG4 file here",
+    dropZoneText: "or",
+    browseButton: "Browse Files",
+    howItWorks: "How it works:",
+    instruction1: "Upload any STG4 file (.stg4_*) or JSON file",
+    instruction2: "The file will be processed as a stream of STG4 chunks",
+    instruction3: "Each chunk will be displayed in the table below",
+    instruction4: "You can convert between binary STG4 and JSON formats",
+    previewSection: "JSON Preview",
+    previewPlaceholder: "Converted JSON will appear here",
+    analysisSection: "STG4 Chunk Analysis",
+    tableStream: "Stream",
+    tableChunkNo: "Chunk No.",
+    tableChunkType: "Chunk Type",
+    tablePlaceholder: "Upload a STG4 file to see chunk analysis",
+    footer: "ActionEditor Stage4 Converter | Drag & Drop File Processing | Stream-based Analysis",
+    statusReady: "Ready. Drop a file to begin.",
+    statusProcessing: "Processing...",
+    statusSuccess: "File processed successfully!",
+    statusError: "Error processing file: {0}",
+    downloadResult: "Download result"
+  },
+  ja: {
+    title: "ActionEditor Stage4 コンバーター",
+    description: ".stg4_* ステージファイルとJSON表現を変換します。",
+    uploadSection: "STG4ファイルをアップロード",
+    dropZoneTitle: "STG4ファイルをドラッグ＆ドロップ",
+    dropZoneText: "または",
+    browseButton: "ファイルを選択",
+    howItWorks: "使い方:",
+    instruction1: "STG4ファイル (.stg4_*) またはJSONファイルをアップロード",
+    instruction2: "ファイルはSTG4チャンクのストリームとして処理されます",
+    instruction3: "各チャンクは下のテーブルに表示されます",
+    instruction4: "バイナリSTG4とJSON形式を相互変換できます",
+    previewSection: "JSONプレビュー",
+    previewPlaceholder: "変換されたJSONがここに表示されます",
+    analysisSection: "STG4チャンク解析",
+    tableStream: "ストリーム",
+    tableChunkNo: "チャンク番号",
+    tableChunkType: "チャンクタイプ",
+    tablePlaceholder: "STG4ファイルをアップロードしてチャンク解析を表示",
+    footer: "ActionEditor Stage4 コンバーター | ドラッグ＆ドロップ処理 | ストリームベース解析",
+    statusReady: "準備完了。ファイルをドロップして開始してください。",
+    statusProcessing: "処理中...",
+    statusSuccess: "ファイルの処理に成功しました！",
+    statusError: "ファイル処理エラー: {0}",
+    downloadResult: "結果をダウンロード"
+  }
+};
+let currentLanguage = "en";
+function updateLanguage(lang) {
+  currentLanguage = lang;
+  document.querySelectorAll("[data-i18n]").forEach((element) => {
+    const key = element.getAttribute("data-i18n");
+    if (translations[lang][key]) {
+      if (element.tagName === "INPUT" || element.tagName === "TEXTAREA") {
+        element.placeholder = translations[lang][key];
+      } else {
+        element.textContent = translations[lang][key];
+      }
+    }
+  });
+}
+function detectLanguage() {
+  const browserLang = navigator.language || navigator.userLanguage;
+  if (browserLang.startsWith("ja")) {
+    return "ja";
+  }
+  return "en";
+}
 const dropArea = document.getElementById("dropArea");
 const fileInput = document.getElementById("fileInput");
 const browseBtn = document.querySelector(".browse-btn");
@@ -1625,6 +1700,18 @@ document.getElementById("fileInfo");
 document.getElementById("chunkTableBody");
 const statusMessage = document.getElementById("statusMessage");
 const downloadButton = document.getElementById("download-button");
+document.getElementById("status");
+document.getElementById("file-button");
+document.getElementById("language-select");
+document.addEventListener("DOMContentLoaded", function() {
+  const languageSelect = document.getElementById("language-select");
+  currentLanguage = detectLanguage();
+  languageSelect.value = currentLanguage;
+  updateLanguage(currentLanguage);
+  languageSelect.addEventListener("change", function() {
+    updateLanguage(this.value);
+  });
+});
 let downloadUrl = null;
 let downloadName = null;
 function resetPreview() {
@@ -1722,6 +1809,12 @@ async function handleFile(file2) {
   }
   setStatus("Unsupported file type. Provide a .stg4_* or .json file.", "error");
 }
+function handleFileSelect(e) {
+  const files = e.target.files;
+  if (files.length) {
+    handleFiles(files);
+  }
+}
 function handleFiles(files) {
   if (!files || files.length === 0) {
     return;
@@ -1756,12 +1849,6 @@ function handleDrop(e) {
   const files = dt.files;
   if (files.length) {
     handleFiles(files);
-  }
-}
-function handleFileSelect(e) {
-  const files = e.target.files;
-  if (files.length) {
-    handleFiles(files[0]);
   }
 }
 downloadButton.addEventListener("click", () => {
