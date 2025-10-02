@@ -1,97 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title data-i18n="title">Stage File Converter</title>
-    <script type="module" crossorigin src="./assets/stage-CMqXVo0x.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/stage-x-EVIs20.css">
-  </head>
-  <body>
-    <main>
-      <header>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n="title">ActionEditor Stage4 Converter</title>
+  <script type="module" crossorigin src="./assets/stage-Cnw6PrXu.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/stage-CqwiL_86.css">
+</head>
+<body>
+  <main>
+    <header>
+      
+      <div class="title-bar">
+        <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="16" height="16" viewBox="0 0 16 16"><path fill="#400" fill-rule="evenodd" d="M2 1 1 2v2l1 1v3l2 2-2 2v2h1l2 2h7l1-1v-1l1-1v-3l-1-1 1-1V2l-1-1h-1l-1 1V1H7L6 2V1H4L3 2V1z"/><path fill="#8cbcfe" fill-rule="evenodd" d="m5 10-2 2v1h10v-3z"/><path fill="#dcdcdc" fill-rule="evenodd" d="M5 15h7v-1H4z"/><path fill="#febc8c" fill-rule="evenodd" d="M11 6v1l-1 1V6H5v3h7l1-1V6z"/><path fill="#2626fe" fill-rule="evenodd" d="m4 6 1-1h8V2h-1l-1 1V2H7L6 3V2H4L3 3V2H2v2l1 1v3l1 1z"/></svg>
         <div>
-          <h1 data-i18n="title">Stage File Converter</h1>
-          <p data-i18n="description">
-            Dump `.stg4_1020` files to JSON, tweak them, then rebuild an identical
-            binary. The parser mirrors the hex pattern so you can debug issues without
-            leaving the browser.
-          </p>
+            <h1 data-i18n="title">ActionEditor Stage4 Converter</h1>
+            <p class="subtitle" data-i18n="description">Convert between <code>.stg4_*</code> stage files and their JSON representation.</p>
         </div>
-        <select id="language-select" class="language-select">
-          <option value="en">English</option>
-          <option value="ja">日本語</option>
-        </select>
-      </header>
+        
+      </div>
+      <select id="language-select" class="language-select">
+        <option value="en">English</option>
+        <option value="ja">日本語</option>
+      </select>
+    </header>
 
-      <div class="panels">
-        <section class="panel" aria-labelledby="dump-title">
-          <div>
-            <h2 id="dump-title" data-i18n="dumpTitle">Dump Stage File</h2>
-            <p data-i18n="dumpDescription">Select a binary stage file. The tool parses and prints a formatted JSON payload.</p>
-          </div>
-
-          <div class="drop-zone" id="dump-drop-zone">
-            <div class="drop-zone-content">
-              <p data-i18n="dropZoneDump">Drop .stg4_1020 file here or use file picker</p>
-            </div>
-            <label class="file-picker">
-              <span data-i18n="filePickerLabel">Stage file (.stg4_1020)</span>
-              <input id="dump-file" type="file" accept=".stg4_1020,application/octet-stream" />
-            </label>
-          </div>
-
-          <section class="actions">
-            <button id="dump-button" type="button" data-i18n="dumpButton">Dump to JSON</button>
-            <button id="copy-json" class="secondary" type="button" data-i18n="copyJson">Copy JSON</button>
-            <a id="download-json" class="download-link secondary disabled" href="#" download data-i18n="downloadJson">
-              Download JSON
-            </a>
-          </section>
-
-          <div id="dump-status" class="status" role="status" aria-live="polite"></div>
-
-          <textarea id="json-output" spellcheck="false" placeholder="JSON output" data-i18n-placeholder="jsonOutputPlaceholder"></textarea>
-        </section>
-
-        <section class="panel" aria-labelledby="build-title">
-          <div>
-            <h2 id="build-title" data-i18n="buildTitle">Build Stage File</h2>
-            <p data-i18n="buildDescription">Load a JSON payload (dumped or hand-authored) and rebuild a binary stage file.</p>
-          </div>
-
-          <div class="drop-zone" id="build-drop-zone">
-            <div class="drop-zone-content">
-              <p data-i18n="dropZoneBuild">Drop JSON file here or use file picker</p>
-            </div>
-            <section class="actions">
-              <button id="load-json-file" class="secondary" type="button" data-i18n="loadJsonFile">Load JSON file</button>
-              <input id="build-file" type="file" accept=".json,application/json" hidden />
-            </section>
-          </div>
-
-          <section class="actions">
-            <button id="build-button" type="button" data-i18n="buildButton">Build binary</button>
-            <a id="download-dat" class="download-link secondary disabled" href="#" download data-i18n="downloadDat">
-              Download .stg4_1020
-            </a>
-          </section>
-
-          <div id="build-status" class="status" role="status" aria-live="polite"></div>
-
-          <textarea
-            id="json-input"
-            spellcheck="false"
-            placeholder="Paste or edit the stage JSON that should become a .stg4_1020 file"
-            data-i18n-placeholder="jsonInputPlaceholder"
-          ></textarea>
-        </section>
+    <div class="panels">
+      <!-- Panel 1: Import STG4 to JSON -->
+      <div class="panel" id="import-panel">
+        <h2 data-i18n="importTitle">Import STG4 to JSON</h2>
+        <div class="drop-zone" id="importDropArea">
+          <i>📁</i>
+          <h3 data-i18n="importDropZoneTitle">Drop .stg4 File Here</h3>
+          <p data-i18n="dropZoneText">or</p>
+          <button class="browse-btn secondary" data-i18n="browseButton">Browse Files</button>
+          <input type="file" class="file-picker" id="importFileInput" accept=".stg4, .stg4_1020">
+        </div>
+        <div class="status" id="importStatusMessage" data-i18n="statusReady">Ready.</div>
+        <div class="result-area">
+          <textarea id="importOutput" readonly placeholder="JSON output will appear here..." style="display: none;"></textarea>
+        </div>
+        <button id="importDownloadButton" type="button" class="disabled" data-i18n="downloadJson">Download JSON</button>
       </div>
 
-      <p class="footer" data-i18n="footer">
-        For testing purpose. Not a final product or tool.
-      </p>
-    </main>
+      <!-- Panel 2: Export JSON to STG4 -->
+      <div class="panel" id="export-panel">
+        <h2 data-i18n="exportTitle">Export JSON to STG4</h2>
+        <div class="drop-zone" id="exportDropArea">
+          <i>📄</i>
+          <h3 data-i18n="exportDropZoneTitle">Drop .json File Here</h3>
+          <p data-i18n="dropZoneText">or</p>
+          <button class="browse-btn secondary" data-i18n="browseButton">Browse Files</button>
+          <input type="file" class="file-picker" id="exportFileInput" accept=".json, application/json">
+        </div>
+        <div class="status" id="exportStatusMessage" data-i18n="statusReady">Ready.</div>
+        <div class="result-area">
+            <p id="exportOutputInfo" class="output-info" style="display: none;"></p>
+        </div>
+        <button id="exportDownloadButton" type="button" class="disabled" data-i18n="downloadStg4">Download STG4</button>
+      </div>
+    </div>
+
+    <footer>
+      <p data-i18n="footer">ActionEditor Stage4 Converter | Drag & Drop File Processing | Stream-based Analysis</p>
+    </footer>
+  </main>
 
-  </body>
+</body>
 </html>
