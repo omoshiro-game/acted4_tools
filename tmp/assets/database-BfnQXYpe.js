@@ -16669,7 +16669,7 @@ function parseAnimationSetElement(reader) {
   const blockOffset = reader.readUint32();
   const flyingOffset = reader.readUint32();
   const strings_count = reader.readUint32();
-  const name = readLengthPrefixedString(reader);
+  const name = reader.readStdString();
   const animationCount = reader.readUint32();
   const animations = loadElements(animationCount, () => parseAnimation(reader));
   return {
@@ -16752,8 +16752,8 @@ function parseEffectElement(reader) {
     height: reader.readUint32(),
     is_giant: reader.readUint32(),
     strings_count: reader.readUint32(),
-    name: readLengthPrefixedString(reader),
-    path: readLengthPrefixedString(reader)
+    name: reader.readStdString(),
+    path: reader.readStdString()
   };
   const animationCount = reader.readUint32();
   element.animations = loadElements(animationCount, () => parseEffectAnimation(reader));
@@ -16787,7 +16787,7 @@ function parseCharaEffectElement(reader) {
     param4: reader.readUint32(),
     param5: reader.readUint32(),
     strings_count: reader.readUint32(),
-    name: readLengthPrefixedString(reader)
+    name: reader.readStdString()
   };
 }
 function writeCharaEffectElement(writer, element) {
@@ -16811,7 +16811,7 @@ function parseScreenEffectElement(reader) {
     param4: reader.readUint32(),
     param5: reader.readUint32(),
     strings_count: reader.readUint32(),
-    name: readLengthPrefixedString(reader)
+    name: reader.readStdString()
   };
 }
 function writeScreenEffectElement(writer, element) {
@@ -16832,8 +16832,8 @@ function parseBmpCharaExcElement(reader) {
     is_giant: reader.readUint32(),
     scale_mode: reader.readUint32(),
     strings_count: reader.readUint32(),
-    name: readLengthPrefixedString(reader),
-    path: readLengthPrefixedString(reader)
+    name: reader.readStdString(),
+    path: reader.readStdString()
   };
 }
 function writeBmpCharaExcElement(writer, element) {
@@ -16850,9 +16850,9 @@ function parseSwordTypeElement(reader) {
     header: reader.readUint32(),
     is_name_same_path: reader.readUint32(),
     strings_count: reader.readUint32(),
-    name: readLengthPrefixedString(reader),
-    path_left: readLengthPrefixedString(reader),
-    path_right: readLengthPrefixedString(reader)
+    name: reader.readStdString(),
+    path_left: reader.readStdString(),
+    path_right: reader.readStdString()
   };
   const positionCount = reader.readUint32();
   element.positions = loadElements(positionCount, () => parseSwordPosition(reader));
