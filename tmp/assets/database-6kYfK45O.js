@@ -16611,7 +16611,7 @@ function writeVersion(writer, version2) {
   writer.writeUint32(version2);
 }
 function writeLengthPrefixedString(writer, value) {
-  writer.writeLengthPrefixedString(value ?? "");
+  writer.writeStdString(value ?? "");
 }
 function loadElements(count, factory) {
   const results = [];
