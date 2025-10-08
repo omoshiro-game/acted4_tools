@@ -1,3 +1,12 @@
+var __typeError = (msg) => {
+  throw TypeError(msg);
+};
+var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
+var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
+var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
+var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
+var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
+var _DataReader_instances, ensureBytes_fn, readView_fn, _controller, _DataWriter_instances, enqueue_fn;
 (function polyfill() {
   const relList = document.createElement("link").relList;
   if (relList && relList.supports && relList.supports("modulepreload")) {
@@ -36,109 +45,93 @@
   }
 })();
 const SHIFT_JIS_DECODER = (() => {
-  if (typeof TextDecoder === "undefined") {
-    return null;
-  }
   try {
     return new TextDecoder("shift-jis");
-  } catch (error) {
+  } catch (e) {
     return new TextDecoder("utf-8");
   }
 })();
 function normalizeShiftJisString(value) {
   return value.replace(/\uFF0D/g, "−");
 }
-function toArrayBuffer(source) {
-  if (source instanceof ArrayBuffer) {
-    return source;
-  }
-  if (ArrayBuffer.isView(source)) {
-    const { buffer, byteOffset, byteLength } = source;
-    return buffer.slice(byteOffset, byteOffset + byteLength);
-  }
-  throw new TypeError("Unsupported binary source. Expected ArrayBuffer or typed array.");
-}
 class DataReader {
-  constructor(source) {
-    this.buffer = toArrayBuffer(source);
-    this.view = new DataView(this.buffer);
+  constructor(stream) {
+    __privateAdd(this, _DataReader_instances);
+    if (!stream || typeof stream.getReader !== "function") {
+      throw new TypeError("A ReadableStream instance is required.");
+    }
+    this.reader = stream.getReader();
+    this.buffer = new Uint8Array(0);
     this.offset = 0;
+    this.streamPosition = 0;
+    this.isDone = false;
   }
-  get remaining() {
-    return this.view.byteLength - this.offset;
+  async readUint8() {
+    return (await __privateMethod(this, _DataReader_instances, readView_fn).call(this, 1)).getUint8(0);
   }
-  seek(position) {
-    if (position < 0 || position > this.view.byteLength) {
-      throw new RangeError("Attempted to seek outside the buffer bounds.");
-    }
-    this.offset = position;
+  async readInt8() {
+    return (await __privateMethod(this, _DataReader_instances, readView_fn).call(this, 1)).getInt8(0);
   }
-  skip(bytes) {
-    this.seek(this.offset + bytes);
+  async readUint16() {
+    return (await __privateMethod(this, _DataReader_instances, readView_fn).call(this, 2)).getUint16(0, true);
   }
-  readUint8() {
-    const value = this.view.getUint8(this.offset);
-    this.offset += 1;
-    return value;
+  async readInt16() {
+    return (await __privateMethod(this, _DataReader_instances, readView_fn).call(this, 2)).getInt16(0, true);
   }
-  readInt8() {
-    const value = this.view.getInt8(this.offset);
-    this.offset += 1;
-    return value;
+  async readUint32() {
+    return (await __privateMethod(this, _DataReader_instances, readView_fn).call(this, 4)).getUint32(0, true);
   }
-  readChar() {
-    return this.readInt8();
+  async readInt32() {
+    return (await __privateMethod(this, _DataReader_instances, readView_fn).call(this, 4)).getInt32(0, true);
   }
-  readUint16() {
-    const value = this.view.getUint16(this.offset, true);
-    this.offset += 2;
-    return value;
+  async readFloat64() {
+    return (await __privateMethod(this, _DataReader_instances, readView_fn).call(this, 8)).getFloat64(0, true);
   }
-  readInt16() {
-    const value = this.view.getInt16(this.offset, true);
-    this.offset += 2;
-    return value;
-  }
-  readUint32() {
-    const value = this.view.getUint32(this.offset, true);
-    this.offset += 4;
-    return value;
-  }
-  readInt32() {
-    const value = this.view.getInt32(this.offset, true);
-    this.offset += 4;
-    return value;
-  }
-  readBytes(length) {
-    if (length < 0 || this.offset + length > this.view.byteLength) {
-      throw new RangeError("Attempted to read beyond the buffer length.");
-    }
-    const bytes = new Uint8Array(this.buffer, this.offset, length);
+  async readBytes(length) {
+    await __privateMethod(this, _DataReader_instances, ensureBytes_fn).call(this, length);
+    const bytes = this.buffer.subarray(this.offset, this.offset + length);
     this.offset += length;
+    this.streamPosition += length;
     return bytes;
   }
-  readString(length) {
-    if (length === 0) {
-      return "";
-    }
-    const bytes = this.readBytes(length);
-    let text;
-    if (!SHIFT_JIS_DECODER) {
-      text = String.fromCharCode(...bytes);
-    } else {
-      text = SHIFT_JIS_DECODER.decode(bytes);
-    }
-    text = text.replace(/\0+$/, "");
+  async readString(length) {
+    if (length === 0) return "";
+    const bytes = await this.readBytes(length);
+    const text = SHIFT_JIS_DECODER.decode(bytes).replace(/\0+$/, "");
     return normalizeShiftJisString(text);
   }
-  readStdString() {
-    const length = this.readUint32();
-    if (length <= 1) {
-      return "";
-    }
+  async readStdString() {
+    const length = await this.readUint32();
+    if (length <= 1) return "";
     return this.readString(length);
   }
 }
+_DataReader_instances = new WeakSet();
+ensureBytes_fn = async function(required) {
+  while (this.buffer.length - this.offset < required && !this.isDone) {
+    const { value, done } = await this.reader.read();
+    if (done) {
+      this.isDone = true;
+      if (this.buffer.length - this.offset < required) {
+        throw new RangeError("Attempted to read beyond the end of the stream.");
+      }
+      break;
+    }
+    const remaining = this.buffer.slice(this.offset);
+    const newBuffer = new Uint8Array(remaining.length + value.length);
+    newBuffer.set(remaining, 0);
+    newBuffer.set(value, remaining.length);
+    this.buffer = newBuffer;
+    this.offset = 0;
+  }
+};
+readView_fn = async function(byteLength) {
+  await __privateMethod(this, _DataReader_instances, ensureBytes_fn).call(this, byteLength);
+  const view = new DataView(this.buffer.buffer, this.buffer.byteOffset + this.offset, byteLength);
+  this.offset += byteLength;
+  this.streamPosition += byteLength;
+  return view;
+};
 function getDefaultExportFromCjs(x) {
   return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
 }
@@ -296,7 +289,7 @@ function requireUtil() {
   }
   util$2.bufferToCode = bufferToCode;
   function canonicalizeEncodingName(target) {
-    var name2 = "";
+    var name = "";
     var expect = ("" + target).toUpperCase().replace(/[^A-Z0-9]+/g, "");
     var aliasNames = objectKeys(config2.EncodingAliases);
     var len = aliasNames.length;
@@ -305,21 +298,21 @@ function requireUtil() {
     for (var i = 0; i < len; i++) {
       encoding = aliasNames[i];
       if (encoding === expect) {
-        name2 = encoding;
+        name = encoding;
         break;
       }
       encodingLen = encoding.length;
       for (j = hit; j < encodingLen; j++) {
         if (encoding.slice(0, j) === expect.slice(0, j) || encoding.slice(-j) === expect.slice(-j)) {
-          name2 = encoding;
+          name = encoding;
           hit = j;
         }
       }
     }
-    if (hasOwnProperty2.call(config2.EncodingAliases, name2)) {
-      return config2.EncodingAliases[name2];
+    if (hasOwnProperty2.call(config2.EncodingAliases, name)) {
+      return config2.EncodingAliases[name];
     }
-    return name2;
+    return name;
   }
   util$2.canonicalizeEncodingName = canonicalizeEncodingName;
   var base64EncodeChars = [
@@ -14148,18 +14141,18 @@ function requireConfig() {
     var aliases = EncodingAliases;
     var names = util2.objectKeys(EncodingNames);
     var orders = [];
-    var name2, encoding, j, l;
+    var name, encoding, j, l;
     for (var i = 0, len = names.length; i < len; i++) {
-      name2 = names[i];
-      aliases[name2] = name2;
-      encoding = EncodingNames[name2];
+      name = names[i];
+      aliases[name] = name;
+      encoding = EncodingNames[name];
       if (encoding != null) {
         if (encoding.order != null) {
-          orders[orders.length] = name2;
+          orders[orders.length] = name;
         }
         if (encoding.alias) {
           for (j = 0, l = encoding.alias.length; j < l; j++) {
-            aliases[encoding.alias[j]] = name2;
+            aliases[encoding.alias[j]] = name;
           }
         }
       }
@@ -15951,90 +15944,9 @@ kanaCaseTable.ZENKANA_TABLE = [
   12443,
   12444
 ];
-const name = "encoding-japanese";
 const version$1 = "2.2.0";
-const description = "Convert and detect character encoding in JavaScript";
-const main = "src/index.js";
-const files = [
-  "encoding.js",
-  "encoding.min.js",
-  "src/*"
-];
-const scripts = {
-  build: "npm run compile && npm run minify",
-  compile: "browserify src/index.js -o encoding.js -s Encoding -p [ bannerify --file src/banner.js ] --no-bundle-external --bare",
-  minify: "uglifyjs encoding.js -o encoding.min.js --comments -c -m -b ascii_only=true,beautify=false",
-  test: "eslint . && npm run build && mocha tests/test",
-  watch: "watchify src/index.js -o encoding.js -s Encoding -p [ bannerify --file src/banner.js ] --no-bundle-external --bare --poll=300 -v"
-};
-const engines = {
-  node: ">=8.10.0"
-};
-const repository = {
-  type: "git",
-  url: "https://github.com/polygonplanet/encoding.js.git"
-};
-const author = "polygonplanet <polygon.planet.aqua@gmail.com>";
-const license = "MIT";
-const bugs = {
-  url: "https://github.com/polygonplanet/encoding.js/issues"
-};
-const homepage = "https://github.com/polygonplanet/encoding.js";
-const keywords = [
-  "base64",
-  "charset",
-  "convert",
-  "detect",
-  "encoding",
-  "euc-jp",
-  "eucjp",
-  "iconv",
-  "iso-2022-jp",
-  "japanese",
-  "jis",
-  "shift_jis",
-  "sjis",
-  "unicode",
-  "urldecode",
-  "urlencode",
-  "utf-16",
-  "utf-32",
-  "utf-8"
-];
-const dependencies = {};
-const devDependencies = {
-  bannerify: "^1.0.1",
-  browserify: "^17.0.0",
-  eslint: "^8.57.0",
-  mocha: "^10.4.0",
-  "package-json-versionify": "^1.0.4",
-  "power-assert": "^1.6.1",
-  "uglify-js": "^3.17.4",
-  uglifyify: "^5.0.2",
-  watchify: "^4.0.0"
-};
-const browserify = {
-  transform: [
-    "package-json-versionify"
-  ]
-};
 const require$$5 = {
-  name,
-  version: version$1,
-  description,
-  main,
-  files,
-  scripts,
-  engines,
-  repository,
-  author,
-  license,
-  bugs,
-  homepage,
-  keywords,
-  dependencies,
-  devDependencies,
-  browserify
+  version: version$1
 };
 var config = requireConfig();
 var util = requireUtil();
@@ -16597,83 +16509,59 @@ function encodeShiftJis(value) {
   return Uint8Array.from(array);
 }
 function toUint8Array(source) {
-  if (source instanceof Uint8Array) {
-    return source;
-  }
-  if (source instanceof ArrayBuffer) {
-    return new Uint8Array(source);
-  }
-  if (ArrayBuffer.isView(source)) {
-    const { buffer, byteOffset, byteLength } = source;
-    return new Uint8Array(buffer, byteOffset, byteLength);
-  }
+  if (source instanceof Uint8Array) return source;
+  if (source instanceof ArrayBuffer) return new Uint8Array(source);
+  if (ArrayBuffer.isView(source)) return new Uint8Array(source.buffer, source.byteOffset, source.byteLength);
   throw new TypeError("Unsupported binary source. Expected ArrayBuffer or typed array.");
 }
 class DataWriter {
-  constructor(initialCapacity = 1024) {
-    this.buffer = new ArrayBuffer(initialCapacity);
-    this.view = new DataView(this.buffer);
-    this.length = 0;
-  }
-  ensureCapacity(additional) {
-    const required = this.length + additional;
-    if (required <= this.buffer.byteLength) {
-      return;
+  constructor(controller) {
+    __privateAdd(this, _DataWriter_instances);
+    __privateAdd(this, _controller);
+    if (!controller || typeof controller.enqueue !== "function") {
+      throw new TypeError("A TransformStream controller is required.");
     }
-    let capacity = this.buffer.byteLength || 1;
-    while (capacity < required) {
-      capacity *= 2;
-    }
-    const newBuffer = new ArrayBuffer(capacity);
-    new Uint8Array(newBuffer).set(new Uint8Array(this.buffer, 0, this.length));
-    this.buffer = newBuffer;
-    this.view = new DataView(this.buffer);
+    __privateSet(this, _controller, controller);
   }
   writeUint8(value) {
-    this.ensureCapacity(1);
-    this.view.setUint8(this.length, value);
-    this.length += 1;
+    const buffer = new ArrayBuffer(1);
+    new DataView(buffer).setUint8(0, value);
+    __privateMethod(this, _DataWriter_instances, enqueue_fn).call(this, buffer);
   }
   writeInt8(value) {
-    this.ensureCapacity(1);
-    this.view.setInt8(this.length, value);
-    this.length += 1;
+    const buffer = new ArrayBuffer(1);
+    new DataView(buffer).setInt8(0, value);
+    __privateMethod(this, _DataWriter_instances, enqueue_fn).call(this, buffer);
   }
   writeUint16(value) {
-    this.ensureCapacity(2);
-    this.view.setUint16(this.length, value, true);
-    this.length += 2;
+    const buffer = new ArrayBuffer(2);
+    new DataView(buffer).setUint16(0, value, true);
+    __privateMethod(this, _DataWriter_instances, enqueue_fn).call(this, buffer);
   }
   writeInt16(value) {
-    this.ensureCapacity(2);
-    this.view.setInt16(this.length, value, true);
-    this.length += 2;
+    const buffer = new ArrayBuffer(2);
+    new DataView(buffer).setInt16(0, value, true);
+    __privateMethod(this, _DataWriter_instances, enqueue_fn).call(this, buffer);
   }
   writeUint32(value) {
-    this.ensureCapacity(4);
-    this.view.setUint32(this.length, value, true);
-    this.length += 4;
+    const buffer = new ArrayBuffer(4);
+    new DataView(buffer).setUint32(0, value, true);
+    __privateMethod(this, _DataWriter_instances, enqueue_fn).call(this, buffer);
   }
   writeInt32(value) {
-    this.ensureCapacity(4);
-    this.view.setInt32(this.length, value, true);
-    this.length += 4;
+    const buffer = new ArrayBuffer(4);
+    new DataView(buffer).setInt32(0, value, true);
+    __privateMethod(this, _DataWriter_instances, enqueue_fn).call(this, buffer);
+  }
+  writeFloat64(value) {
+    const buffer = new ArrayBuffer(8);
+    new DataView(buffer).setFloat64(0, Number.isFinite(value) ? value : 0, true);
+    __privateMethod(this, _DataWriter_instances, enqueue_fn).call(this, buffer);
   }
   writeBytes(source) {
     const bytes = toUint8Array(source);
-    this.ensureCapacity(bytes.byteLength);
-    new Uint8Array(this.buffer, this.length, bytes.byteLength).set(bytes);
-    this.length += bytes.byteLength;
-  }
-  writeString(value, length) {
-    const encoded = encodeShiftJis(value || "");
-    if (encoded.length > length) {
-      this.writeBytes(encoded.subarray(0, length));
-    } else {
-      this.writeBytes(encoded);
-      if (encoded.length < length) {
-        this.writeBytes(new Uint8Array(length - encoded.length));
-      }
+    if (bytes.length > 0) {
+      __privateGet(this, _controller).enqueue(bytes);
     }
   }
   writeLengthPrefixedString(value) {
@@ -16684,21 +16572,12 @@ class DataWriter {
       this.writeUint8(0);
     }
   }
-  align(alignment) {
-    const remainder = this.length % alignment;
-    if (remainder === 0) {
-      return;
-    }
-    const padding = alignment - remainder;
-    this.writeBytes(new Uint8Array(padding));
-  }
-  toArrayBuffer() {
-    return this.buffer.slice(0, this.length);
-  }
-  toUint8Array() {
-    return new Uint8Array(this.buffer, 0, this.length);
-  }
 }
+_controller = new WeakMap();
+_DataWriter_instances = new WeakSet();
+enqueue_fn = function(buffer) {
+  __privateGet(this, _controller).enqueue(new Uint8Array(buffer));
+};
 const MAGIC_VALUES = /* @__PURE__ */ new Set([182, 966, 1020]);
 function ensureReader(source) {
   if (source instanceof DataReader) {
@@ -16778,7 +16657,7 @@ function parseAnimationSetElement(reader) {
   const blockOffset = reader.readUint32();
   const flyingOffset = reader.readUint32();
   const strings_count = reader.readUint32();
-  const name2 = readLengthPrefixedString(reader);
+  const name = readLengthPrefixedString(reader);
   const animationCount = reader.readUint32();
   const animations = loadElements(animationCount, () => parseAnimation(reader));
   return {
@@ -16787,7 +16666,7 @@ function parseAnimationSetElement(reader) {
     block_offset: blockOffset,
     invincibility_offset: invincibilityOffset,
     strings_count,
-    name: name2,
+    name,
     animations
   };
 }
@@ -16796,7 +16675,7 @@ function writeAnimationSetElement(writer, element) {
   writer.writeUint32(element.invincibility_offset ?? 0);
   writer.writeUint32(element.block_offset ?? 0);
   writer.writeUint32(element.flying_offset ?? 0);
-  writer.writeUint32(element.unknown ?? 0);
+  writer.writeUint32(1);
   writeLengthPrefixedString(writer, element.name);
   const animations = Array.isArray(element.animations) ? element.animations : [];
   writer.writeUint32(animations.length);
@@ -17123,8 +17002,8 @@ function writeVersion(writer, version2) {
   }
   writer.writeUint32(version2);
 }
-function normalizeName(name2) {
-  return name2.toLowerCase();
+function normalizeName(name) {
+  return name.toLowerCase();
 }
 const PARSER_MAP = /* @__PURE__ */ new Map([
   ["anime", parseAnime],
@@ -17170,19 +17049,19 @@ const SERIALIZER_MAP = /* @__PURE__ */ new Map([
   ["swordtype", serializeSwordType],
   ["swordtype.dat", serializeSwordType]
 ]);
-function resolveParser(name2) {
-  const normalized = normalizeName(name2);
+function resolveParser(name) {
+  const normalized = normalizeName(name);
   if (PARSER_MAP.has(normalized)) {
     return PARSER_MAP.get(normalized);
   }
-  throw new Error(`Unknown database type: ${name2}`);
+  throw new Error(`Unknown database type: ${name}`);
 }
-function resolveSerializer(name2) {
-  const normalized = normalizeName(name2);
+function resolveSerializer(name) {
+  const normalized = normalizeName(name);
   if (SERIALIZER_MAP.has(normalized)) {
     return SERIALIZER_MAP.get(normalized);
   }
-  throw new Error(`Unknown database type: ${name2}`);
+  throw new Error(`Unknown database type: ${name}`);
 }
 const DATABASE_TYPES = [
   "Anime.dat",
