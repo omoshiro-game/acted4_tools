@@ -1,12 +1,3 @@
-var __typeError = (msg) => {
-  throw TypeError(msg);
-};
-var __accessCheck = (obj, member, msg) => member.has(obj) || __typeError("Cannot " + msg);
-var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read from private field"), getter ? getter.call(obj) : member.get(obj));
-var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
-var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
-var _DataReader_instances, ensureBytes_fn, readView_fn, _controller, _DataWriter_instances, enqueue_fn;
 (function polyfill() {
   const relList = document.createElement("link").relList;
   if (relList && relList.supports && relList.supports("modulepreload")) {
@@ -44,94 +35,6 @@ var _DataReader_instances, ensureBytes_fn, readView_fn, _controller, _DataWriter
     fetch(link.href, fetchOpts);
   }
 })();
-const SHIFT_JIS_DECODER = (() => {
-  try {
-    return new TextDecoder("shift-jis");
-  } catch (e) {
-    return new TextDecoder("utf-8");
-  }
-})();
-function normalizeShiftJisString(value) {
-  return value.replace(/\uFF0D/g, "−");
-}
-class DataReader {
-  constructor(stream) {
-    __privateAdd(this, _DataReader_instances);
-    if (!stream || typeof stream.getReader !== "function") {
-      throw new TypeError("A ReadableStream instance is required.");
-    }
-    this.reader = stream.getReader();
-    this.buffer = new Uint8Array(0);
-    this.offset = 0;
-    this.streamPosition = 0;
-    this.isDone = false;
-  }
-  async readUint8() {
-    return (await __privateMethod(this, _DataReader_instances, readView_fn).call(this, 1)).getUint8(0);
-  }
-  async readInt8() {
-    return (await __privateMethod(this, _DataReader_instances, readView_fn).call(this, 1)).getInt8(0);
-  }
-  async readUint16() {
-    return (await __privateMethod(this, _DataReader_instances, readView_fn).call(this, 2)).getUint16(0, true);
-  }
-  async readInt16() {
-    return (await __privateMethod(this, _DataReader_instances, readView_fn).call(this, 2)).getInt16(0, true);
-  }
-  async readUint32() {
-    return (await __privateMethod(this, _DataReader_instances, readView_fn).call(this, 4)).getUint32(0, true);
-  }
-  async readInt32() {
-    return (await __privateMethod(this, _DataReader_instances, readView_fn).call(this, 4)).getInt32(0, true);
-  }
-  async readFloat64() {
-    return (await __privateMethod(this, _DataReader_instances, readView_fn).call(this, 8)).getFloat64(0, true);
-  }
-  async readBytes(length) {
-    await __privateMethod(this, _DataReader_instances, ensureBytes_fn).call(this, length);
-    const bytes = this.buffer.subarray(this.offset, this.offset + length);
-    this.offset += length;
-    this.streamPosition += length;
-    return bytes;
-  }
-  async readString(length) {
-    if (length === 0) return "";
-    const bytes = await this.readBytes(length);
-    const text = SHIFT_JIS_DECODER.decode(bytes).replace(/\0+$/, "");
-    return normalizeShiftJisString(text);
-  }
-  async readStdString() {
-    const length = await this.readUint32();
-    if (length <= 1) return "";
-    return this.readString(length);
-  }
-}
-_DataReader_instances = new WeakSet();
-ensureBytes_fn = async function(required) {
-  while (this.buffer.length - this.offset < required && !this.isDone) {
-    const { value, done } = await this.reader.read();
-    if (done) {
-      this.isDone = true;
-      if (this.buffer.length - this.offset < required) {
-        throw new RangeError("Attempted to read beyond the end of the stream.");
-      }
-      break;
-    }
-    const remaining = this.buffer.slice(this.offset);
-    const newBuffer = new Uint8Array(remaining.length + value.length);
-    newBuffer.set(remaining, 0);
-    newBuffer.set(value, remaining.length);
-    this.buffer = newBuffer;
-    this.offset = 0;
-  }
-};
-readView_fn = async function(byteLength) {
-  await __privateMethod(this, _DataReader_instances, ensureBytes_fn).call(this, byteLength);
-  const view = new DataView(this.buffer.buffer, this.buffer.byteOffset + this.offset, byteLength);
-  this.offset += byteLength;
-  this.streamPosition += byteLength;
-  return view;
-};
 function getDefaultExportFromCjs(x) {
   return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
 }
@@ -16508,82 +16411,191 @@ function encodeShiftJis(value) {
   const array = encoding.convert(unicodeCodes, { to: "SJIS", from: "UNICODE" });
   return Uint8Array.from(array);
 }
-function toUint8Array(source) {
-  if (source instanceof Uint8Array) return source;
-  if (source instanceof ArrayBuffer) return new Uint8Array(source);
-  if (ArrayBuffer.isView(source)) return new Uint8Array(source.buffer, source.byteOffset, source.byteLength);
-  throw new TypeError("Unsupported binary source. Expected ArrayBuffer or typed array.");
+const SHIFT_JIS_DECODER = (() => {
+  try {
+    return new TextDecoder("shift-jis");
+  } catch (e) {
+    return new TextDecoder("utf-8");
+  }
+})();
+function normalizeShiftJisString(value) {
+  return value.replace(/\uFF0D/g, "−");
+}
+class DataReader {
+  constructor(buffer) {
+    this.view = new DataView(buffer);
+    this.position = 0;
+  }
+  readInt8() {
+    const value = this.view.getInt8(this.position);
+    this.position += 1;
+    return value;
+  }
+  readUint8() {
+    const value = this.view.getUint8(this.position);
+    this.position += 1;
+    return value;
+  }
+  readUint16() {
+    const value = this.view.getUint16(this.position, true);
+    this.position += 2;
+    return value;
+  }
+  readInt16() {
+    const value = this.view.getInt16(this.position, true);
+    this.position += 2;
+    return value;
+  }
+  readUint32() {
+    const value = this.view.getUint32(this.position, true);
+    this.position += 4;
+    return value;
+  }
+  readInt32() {
+    const value = this.view.getInt32(this.position, true);
+    this.position += 4;
+    return value;
+  }
+  readFloat32() {
+    const value = this.view.getFloat32(this.position, true);
+    this.position += 4;
+    return value;
+  }
+  readFloat64() {
+    const value = this.view.getFloat64(this.position, true);
+    this.position += 8;
+    return value;
+  }
+  readString() {
+    const length = this.readUint32();
+    if (length > 1) {
+      const bytes = new Uint8Array(this.view.buffer, this.position, length);
+      this.position += length;
+      const text = SHIFT_JIS_DECODER.decode(bytes).replace(/\0+$/, "");
+      return normalizeShiftJisString(text);
+    } else {
+      return "";
+    }
+  }
+  readStdString() {
+    const length = this.readUint32();
+    if (length <= 1) return "";
+    return this.readFixedString(length);
+  }
+  readFixedString(length) {
+    const bytes = new Uint8Array(this.view.buffer, this.position, length);
+    this.position += length;
+    const text = SHIFT_JIS_DECODER.decode(bytes).replace(/\0+$/, "");
+    return normalizeShiftJisString(text);
+  }
+  readBytes(length) {
+    const bytes = new Uint8Array(this.view.buffer, this.position, length);
+    this.position += length;
+    return bytes;
+  }
+  skip(bytes) {
+    this.position += bytes;
+  }
+  remaining() {
+    return this.view.byteLength - this.position;
+  }
 }
 class DataWriter {
-  constructor(controller) {
-    __privateAdd(this, _DataWriter_instances);
-    __privateAdd(this, _controller);
-    if (!controller || typeof controller.enqueue !== "function") {
-      throw new TypeError("A TransformStream controller is required.");
-    }
-    __privateSet(this, _controller, controller);
-  }
-  writeUint8(value) {
-    const buffer = new ArrayBuffer(1);
-    new DataView(buffer).setUint8(0, value);
-    __privateMethod(this, _DataWriter_instances, enqueue_fn).call(this, buffer);
+  constructor() {
+    this.chunks = [];
+    this.position = 0;
   }
   writeInt8(value) {
     const buffer = new ArrayBuffer(1);
-    new DataView(buffer).setInt8(0, value);
-    __privateMethod(this, _DataWriter_instances, enqueue_fn).call(this, buffer);
+    const view = new DataView(buffer);
+    view.setInt8(0, value);
+    this.chunks.push(new Uint8Array(buffer));
+    this.position += 1;
+  }
+  writeUint8(value) {
+    const buffer = new ArrayBuffer(1);
+    const view = new DataView(buffer);
+    view.setUint8(0, value);
+    this.chunks.push(new Uint8Array(buffer));
+    this.position += 1;
   }
   writeUint16(value) {
     const buffer = new ArrayBuffer(2);
-    new DataView(buffer).setUint16(0, value, true);
-    __privateMethod(this, _DataWriter_instances, enqueue_fn).call(this, buffer);
+    const view = new DataView(buffer);
+    view.setUint16(0, value, true);
+    this.chunks.push(new Uint8Array(buffer));
+    this.position += 2;
   }
+  // ADDED: Missing method needed by the parser
   writeInt16(value) {
     const buffer = new ArrayBuffer(2);
-    new DataView(buffer).setInt16(0, value, true);
-    __privateMethod(this, _DataWriter_instances, enqueue_fn).call(this, buffer);
+    const view = new DataView(buffer);
+    view.setInt16(0, value, true);
+    this.chunks.push(new Uint8Array(buffer));
+    this.position += 2;
   }
   writeUint32(value) {
     const buffer = new ArrayBuffer(4);
-    new DataView(buffer).setUint32(0, value, true);
-    __privateMethod(this, _DataWriter_instances, enqueue_fn).call(this, buffer);
+    const view = new DataView(buffer);
+    view.setUint32(0, value, true);
+    this.chunks.push(new Uint8Array(buffer));
+    this.position += 4;
   }
   writeInt32(value) {
     const buffer = new ArrayBuffer(4);
-    new DataView(buffer).setInt32(0, value, true);
-    __privateMethod(this, _DataWriter_instances, enqueue_fn).call(this, buffer);
+    const view = new DataView(buffer);
+    view.setInt32(0, value, true);
+    this.chunks.push(new Uint8Array(buffer));
+    this.position += 4;
+  }
+  writeFloat32(value) {
+    const buffer = new ArrayBuffer(4);
+    const view = new DataView(buffer);
+    view.setFloat32(0, value, true);
+    this.chunks.push(new Uint8Array(buffer));
+    this.position += 4;
   }
   writeFloat64(value) {
     const buffer = new ArrayBuffer(8);
-    new DataView(buffer).setFloat64(0, Number.isFinite(value) ? value : 0, true);
-    __privateMethod(this, _DataWriter_instances, enqueue_fn).call(this, buffer);
+    const view = new DataView(buffer);
+    view.setFloat64(0, value, true);
+    this.chunks.push(new Uint8Array(buffer));
+    this.position += 8;
   }
-  writeBytes(source) {
-    const bytes = toUint8Array(source);
-    if (bytes.length > 0) {
-      __privateGet(this, _controller).enqueue(bytes);
-    }
-  }
-  writeLengthPrefixedString(value) {
+  writeStdString(value) {
     const bytes = encodeShiftJis(value || "");
     this.writeUint32(bytes.length + 1);
+    this.position += 4;
     if (bytes.length > 0) {
-      this.writeBytes(bytes);
+      this.chunks.push(bytes);
       this.writeUint8(0);
+      this.position += bytes.length + 1;
     }
   }
+  writeBytes(bytes) {
+    this.chunks.push(bytes);
+    this.position += bytes.length;
+  }
+  toBuffer() {
+    const totalLength = this.chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of this.chunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return result.buffer;
+  }
 }
-_controller = new WeakMap();
-_DataWriter_instances = new WeakSet();
-enqueue_fn = function(buffer) {
-  __privateGet(this, _controller).enqueue(new Uint8Array(buffer));
-};
 const MAGIC_VALUES = /* @__PURE__ */ new Set([182, 966, 1020]);
 function ensureReader(source) {
   if (source instanceof DataReader) {
     return source;
   }
-  return new DataReader(source);
+  if (source instanceof ArrayBuffer) {
+    return new DataReader(source);
+  }
+  throw new TypeError("Source must be an ArrayBuffer or a DataReader instance.");
 }
 function readVersion(reader) {
   const version2 = reader.readUint32();
@@ -16592,12 +16604,11 @@ function readVersion(reader) {
   }
   return version2;
 }
-function readLengthPrefixedString(reader) {
-  const length = reader.readUint32();
-  if (length <= 1) {
-    return "";
+function writeVersion(writer, version2) {
+  if (!MAGIC_VALUES.has(version2)) {
+    throw new Error(`Unexpected database version: 0x${version2 == null ? void 0 : version2.toString(16)}`);
   }
-  return reader.readString(length);
+  writer.writeUint32(version2);
 }
 function writeLengthPrefixedString(writer, value) {
   writer.writeLengthPrefixedString(value ?? "");
@@ -16621,7 +16632,8 @@ function parseAnimation(reader) {
     sample_type: reader.readUint8(),
     frame_start: reader.readUint16(),
     strings_count: reader.readUint32(),
-    name: readLengthPrefixedString(reader),
+    // Use the reader's built-in method
+    name: reader.readStdString(),
     frames: []
   };
   const frameCount = reader.readUint32();
@@ -16639,8 +16651,8 @@ function writeAnimation(writer, animation) {
   writer.writeUint16(animation.sample_list_index ?? 0);
   writer.writeUint8(animation.sample_type ?? 0);
   writer.writeUint16(animation.frame_start ?? 0);
-  writer.writeUint32(animation.strings_count ?? 0);
-  writeLengthPrefixedString(writer, animation.name);
+  writer.writeUint32(1);
+  writer.writeStdString(animation.name);
   const frames = Array.isArray(animation.frames) ? animation.frames : [];
   writer.writeUint32(frames.length);
   writeElements(frames, (frame) => {
@@ -16676,7 +16688,7 @@ function writeAnimationSetElement(writer, element) {
   writer.writeUint32(element.block_offset ?? 0);
   writer.writeUint32(element.flying_offset ?? 0);
   writer.writeUint32(1);
-  writeLengthPrefixedString(writer, element.name);
+  writer.writeStdString(element.name);
   const animations = Array.isArray(element.animations) ? element.animations : [];
   writer.writeUint32(animations.length);
   writeElements(animations, (animation) => writeAnimation(writer, animation));
@@ -16716,8 +16728,8 @@ function parseSimpleAsset(reader, hasVolume = false) {
   } else {
     element.unknown2 = reader.readUint32();
   }
-  element.name = readLengthPrefixedString(reader);
-  element.path = readLengthPrefixedString(reader);
+  element.name = reader.readStdString();
+  element.path = reader.readStdString();
   return element;
 }
 function writeSimpleAsset(writer, element, hasVolume = false) {
@@ -16889,7 +16901,7 @@ function writeList(database, elementWriter) {
   const elements = ((_a = database == null ? void 0 : database.data) == null ? void 0 : _a.elements) ?? [];
   writer.writeUint32(elements.length);
   writeElements(elements, (element) => elementWriter(writer, element));
-  return writer.toArrayBuffer();
+  return writer.toBuffer();
 }
 function parseAnime(source) {
   return parseList(source, parseAnimation);
@@ -16916,7 +16928,7 @@ function serializeAnimeSet(database) {
   const elements = ((_a = database == null ? void 0 : database.data) == null ? void 0 : _a.elements) ?? [];
   writer.writeUint32(elements.length);
   writeElements(elements, (element) => writeAnimationSetElement(writer, element));
-  return writer.toArrayBuffer();
+  return writer.toBuffer();
 }
 function parseBgm(source) {
   return parseList(source, (reader) => parseSimpleAsset(reader, true));
@@ -16967,7 +16979,7 @@ function serializeEffect(database) {
   const elements = ((_a = database == null ? void 0 : database.data) == null ? void 0 : _a.elements) ?? [];
   writer.writeUint32(elements.length);
   writeElements(elements, (element) => writeEffectElement(writer, element));
-  return writer.toArrayBuffer();
+  return writer.toBuffer();
 }
 function parseScrEffect(source) {
   return parseList(source, parseScreenEffectElement);
@@ -16994,13 +17006,7 @@ function serializeSwordType(database) {
   const elements = ((_a = database == null ? void 0 : database.data) == null ? void 0 : _a.elements) ?? [];
   writer.writeUint32(elements.length);
   writeElements(elements, (element) => writeSwordTypeElement(writer, element));
-  return writer.toArrayBuffer();
-}
-function writeVersion(writer, version2) {
-  if (!MAGIC_VALUES.has(version2)) {
-    throw new Error(`Unexpected database version: 0x${version2 == null ? void 0 : version2.toString(16)}`);
-  }
-  writer.writeUint32(version2);
+  return writer.toBuffer();
 }
 function normalizeName(name) {
   return name.toLowerCase();
